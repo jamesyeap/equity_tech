@@ -15,7 +15,8 @@ public class OrderExecutor {
         this.simulator = simulator;
     }
 
-    public void addOrReplaceOrders(List<OrderGoal> orderGoals) {
+    public List<String> addOrReplaceOrders(List<OrderGoal> orderGoals) {
+        List<String> decisionUpdates = new ArrayList<>();
 
         // add or replace open orders
         for (OrderGoal goal : orderGoals) {
@@ -26,7 +27,8 @@ public class OrderExecutor {
             // top up
             if (goalSize > openOrderSize) {
                 Integer topUpSize = goalSize - openOrderSize;
-                sendOrder(goalPrice, topUpSize);
+                String decisionUpdate = sendOrder(goalPrice, topUpSize);
+                decisionUpdates.add(decisionUpdate);
             }
 
             // replace orders
@@ -37,9 +39,10 @@ public class OrderExecutor {
                 sortOpenOrdersByAscendingSizeAndDescendingTime(openOrdersWithSamePrice);
 
                 for (Order order : openOrdersWithSamePrice) {
-                    cancelOrder(order);
-                    excessSize -= order.getSize();
+                    String decisionUpdate = cancelOrder(order);
+                    decisionUpdates.add(decisionUpdate);
 
+                    excessSize -= order.getSize();
                     if (excessSize <= 0) {
                         break;
                     }
@@ -47,14 +50,19 @@ public class OrderExecutor {
 
                 if (excessSize < 0) {
                     Integer overshotSize = -excessSize;
-                    sendOrder(goalPrice, overshotSize);
+                    String decisionUpdate = sendOrder(goalPrice, overshotSize);
+                    decisionUpdates.add(decisionUpdate);
                 }
             }
         }
+
+        return decisionUpdates;
     }
 
-    public void cancelOutdatedOrders(List<OrderGoal> orderGoals) {
+    public List<String> cancelOutdatedOrders(List<OrderGoal> orderGoals) {
         // cancel open orders that are no longer part of the current order strategy
+        List<String> decisionUpdates = new ArrayList<>();
+
         for (Order openOrder : getOpenOrders()) {
             boolean isOutdated = true;
 
@@ -66,14 +74,23 @@ public class OrderExecutor {
             }
 
             if (isOutdated) {
-                cancelOrder(openOrder);
+                String decisionUpdate = cancelOrder(openOrder);
+                decisionUpdates.add(decisionUpdate);
             }
         }
+
+        return decisionUpdates;
     }
 
-    public void cancelAllOrders() {
-        SimulatedExchange simulatedExchange = this.simulator.getSimulatedExchange();
-        simulatedExchange.cancelAllOrders();
+    public List<String> cancelAllOrders() {
+        List<String> decisionUpdates = new ArrayList<>();
+
+        for (Order order : getOpenOrders()) {
+            String decisionUpdate = cancelOrder(order);
+            decisionUpdates.add(decisionUpdate);
+        }
+
+        return decisionUpdates;
     }
 
     private Integer getSizeOfOpenOrdersWithSamePrice(OrderGoal orderGoal) {
@@ -99,16 +116,23 @@ public class OrderExecutor {
         return openOrdersWithSamePrice;
     }
 
-    private void sendOrder(Double price, Integer size) {
-        Order order = new Order(getCurrentTimestamp(), price, size);
+    private String sendOrder(Double price, Integer size) {
+        String decisionUpdate = String.format("[N:%s:%d]", price, size);
 
+        Order order = new Order(getCurrentTimestamp(), price, size);
         SimulatedExchange simulatedExchange = this.simulator.getSimulatedExchange();
         simulatedExchange.receiveOrder(order);
+
+        return decisionUpdate;
     }
 
-    private void cancelOrder(Order order) {
+    private String cancelOrder(Order order) {
+        String decisionUpdate = String.format("[C:%s:%d]", order.getPrice(), order.getSize());
+
         SimulatedExchange simulatedExchange = this.simulator.getSimulatedExchange();
         simulatedExchange.cancelOrder(order);
+
+        return decisionUpdate;
     }
 
     private List<Order> getOpenOrders() {

@@ -49,14 +49,6 @@ public class SimulatedExchange {
         }
     }
 
-    public void cancelAllOrders() {
-        for (Order order : openOrders) {
-            this.cancelledOrders.add(order);
-        }
-
-        this.openOrders.clear();
-    }
-
     public void cancelOrder(Order order) {
         this.openOrders.remove(order);
         this.cancelledOrders.add(order);

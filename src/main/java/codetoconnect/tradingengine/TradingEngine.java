@@ -53,27 +53,62 @@ public class TradingEngine {
     }
 
     private void updateStrategy() {
-        if (isBelowMinRatio()) {
-            List<OrderGoal> aggressiveOrderGoal = generateAggressiveCatchupStrategy();
-            orderExecutor.addOrReplaceOrders(aggressiveOrderGoal);
+        List<String> allDecisionUpdates = new ArrayList<>();
 
+        if (isBelowMinRatio()) {
+            System.out.format("========== [BELOW MIN RATIO]: (MIN RATIO = %d) (CUMULATIVE = %d) ==========\n",
+                    getMinRatioSize(), getCumulativeExecutedShares());
+
+            // shortfall first
+            List<OrderGoal> aggressiveOrderGoal = generateAggressiveCatchupStrategy();
+            allDecisionUpdates.addAll(
+                    orderExecutor.addOrReplaceOrders(aggressiveOrderGoal)
+            );
+
+            // adjust the rest of the orders with passive layering strategy
             List<OrderGoal> passiveOrderGoals = generatePassiveLayeringStrategy();
-            orderExecutor.addOrReplaceOrders(passiveOrderGoals);
+            allDecisionUpdates.addAll(
+                orderExecutor.addOrReplaceOrders(passiveOrderGoals)
+            );
 
             // cleanup
             List<OrderGoal> orderGoals = new ArrayList<>(aggressiveOrderGoal);
             orderGoals.addAll(passiveOrderGoals);
-            orderExecutor.cancelOutdatedOrders(orderGoals);
+            allDecisionUpdates.addAll(
+                orderExecutor.cancelOutdatedOrders(orderGoals)
+            );
         } else if (hasBreachedMaxRatio()) {
-            orderExecutor.cancelAllOrders();
+            // cancel all orders
+            System.out.format("========== [BREACHED MAX RATIO]: (MAX RATIO = %d) (CUMULATIVE = %d) ==========\n",
+                    getMaxRatioSize(), getCumulativeExecutedShares());
 
+            allDecisionUpdates.addAll(
+                    orderExecutor.cancelAllOrders()
+            );
         } else {
+            System.out.format("========== [WITHIN THRESHOLDS]: (MIN RATIO = %d) (MAX RATIO = %d) (CUMULATIVE = %d) ==========\n",
+                    getMinRatioSize(), getMaxRatioSize(), getCumulativeExecutedShares());
+
+            // adjust the orders with passive layering strategy
             List<OrderGoal> orderGoals = generatePassiveLayeringStrategy();
-            orderExecutor.addOrReplaceOrders(orderGoals);
+            allDecisionUpdates.addAll(
+                orderExecutor.addOrReplaceOrders(orderGoals)
+            );
 
             // cleanup
-            orderExecutor.cancelOutdatedOrders(orderGoals);
+            allDecisionUpdates.addAll(
+                orderExecutor.cancelOutdatedOrders(orderGoals)
+            );
         }
+
+        // print any updates to open orders
+        if (!allDecisionUpdates.isEmpty()) {
+            System.out.println(allDecisionUpdates);
+        } else {
+            System.out.println("[NO CHANGE]");
+        }
+
+        System.out.println();
     }
 
     private boolean isBelowMinRatio() {
@@ -123,9 +158,11 @@ public class TradingEngine {
         Integer minRatioSize = getMinRatioSize();
 
         Integer shortfallSize = minRatioSize - cumulativeExecutedShares;
-        Double bestAskPrice = getBestAsk().getPrice();
+        Integer remainingSize = getRemainingShares();;
+        Integer goalSize = Math.min(shortfallSize, remainingSize);
 
-        goals.add(createOrderGoal(bestAskPrice, shortfallSize));
+        Double bestAskPrice = getBestAsk().getPrice();
+        goals.add(createOrderGoal(bestAskPrice, goalSize));
 
         return goals;
     }
