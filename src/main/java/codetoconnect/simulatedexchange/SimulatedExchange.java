@@ -32,7 +32,7 @@ public class SimulatedExchange {
     public boolean execute() {
         boolean endSimulation = false;
 
-        for (Order order : openOrders) {
+        for (Order order : getOpenOrders()) {
             if (isMarketable(order)) {
                 fillOpenOrder(order);
             }

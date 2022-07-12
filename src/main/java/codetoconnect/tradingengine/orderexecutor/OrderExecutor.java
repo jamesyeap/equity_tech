@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderExecutor {
+    private static final Integer BATCH_SIZE = 50;
     private final Simulator simulator;
 
     public OrderExecutor(Simulator simulator) {
@@ -27,8 +28,8 @@ public class OrderExecutor {
             // top up
             if (goalSize > openOrderSize) {
                 Integer topUpSize = goalSize - openOrderSize;
-                String decisionUpdate = sendOrder(goalPrice, topUpSize);
-                decisionUpdates.add(decisionUpdate);
+                List<String> decisionUpdate = sendOrderInBatches(goalPrice, topUpSize, BATCH_SIZE);
+                decisionUpdates.addAll(decisionUpdate);
             }
 
             // replace orders
@@ -50,8 +51,8 @@ public class OrderExecutor {
 
                 if (excessSize < 0) {
                     Integer overshotSize = -excessSize;
-                    String decisionUpdate = sendOrder(goalPrice, overshotSize);
-                    decisionUpdates.add(decisionUpdate);
+                    List<String> decisionUpdate = sendOrderInBatches(goalPrice, overshotSize, BATCH_SIZE);
+                    decisionUpdates.addAll(decisionUpdate);
                 }
             }
         }
@@ -59,8 +60,20 @@ public class OrderExecutor {
         return decisionUpdates;
     }
 
+    public List<String> cancelAllOrders() {
+        List<String> decisionUpdates = new ArrayList<>();
+
+        for (Order order : getOpenOrders()) {
+            String decisionUpdate = cancelOrder(order);
+            decisionUpdates.add(decisionUpdate);
+        }
+
+        return decisionUpdates;
+    }
+
     public List<String> cancelOutdatedOrders(List<OrderGoal> orderGoals) {
-        // cancel open orders that are no longer part of the current order strategy
+        // cancel all open orders that are no longer part of the current order strategy
+
         List<String> decisionUpdates = new ArrayList<>();
 
         for (Order openOrder : getOpenOrders()) {
@@ -77,17 +90,6 @@ public class OrderExecutor {
                 String decisionUpdate = cancelOrder(openOrder);
                 decisionUpdates.add(decisionUpdate);
             }
-        }
-
-        return decisionUpdates;
-    }
-
-    public List<String> cancelAllOrders() {
-        List<String> decisionUpdates = new ArrayList<>();
-
-        for (Order order : getOpenOrders()) {
-            String decisionUpdate = cancelOrder(order);
-            decisionUpdates.add(decisionUpdate);
         }
 
         return decisionUpdates;
@@ -124,6 +126,22 @@ public class OrderExecutor {
         simulatedExchange.receiveOrder(order);
 
         return decisionUpdate;
+    }
+
+    private List<String> sendOrderInBatches(Double price, Integer size, Integer sizePerBatch) {
+        List<String> decisionUpdates = new ArrayList<>();
+
+        Integer remainingSizeToSend = size;
+        while (remainingSizeToSend > 0) {
+            Integer currentOrderSize = Math.min(sizePerBatch, remainingSizeToSend);
+
+            String decisionUpdate = sendOrder(price, currentOrderSize);
+            decisionUpdates.add(decisionUpdate);
+
+            remainingSizeToSend -= currentOrderSize;
+        }
+
+        return decisionUpdates;
     }
 
     private String cancelOrder(Order order) {
