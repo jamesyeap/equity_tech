@@ -32,7 +32,7 @@ public class SimulatedExchange {
     public boolean execute() {
         boolean endSimulation = false;
 
-        for (Order order : openOrders) {
+        for (Order order : getOpenOrders()) {
             if (isMarketable(order)) {
                 fillOpenOrder(order);
             }
@@ -57,6 +57,22 @@ public class SimulatedExchange {
     public List<Order> getOpenOrders() {
         List<Order> copy = new ArrayList<>(openOrders);
         return copy;
+    }
+
+    public void printEndOfSimulationSummary() {
+        System.out.format("Volume-Weighted Average Price: %s\n", calculateVolumeWeightedAveragePrice());
+    }
+
+    private Double calculateVolumeWeightedAveragePrice() {
+        Double nominator = 0.0;
+        Double denominator = 0.0;
+
+        for (Order order : filledOrders) {
+            nominator += (order.getPrice() * order.getSize());
+            denominator += order.getSize();
+        }
+
+        return nominator / denominator;
     }
 
     private boolean isMarketable(Order order) {

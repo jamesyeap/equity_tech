@@ -9,10 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderExecutor {
+    private static final Integer DEFAULT_BATCH_SIZE = Integer.MAX_VALUE;
+
+    private Integer batchSize;
+
     private final Simulator simulator;
 
     public OrderExecutor(Simulator simulator) {
         this.simulator = simulator;
+    }
+
+    public void setBatchSize(Integer batchSize) {
+        this.batchSize = batchSize;
     }
 
     public List<String> addOrReplaceOrders(List<OrderGoal> orderGoals) {
@@ -27,8 +35,8 @@ public class OrderExecutor {
             // top up
             if (goalSize > openOrderSize) {
                 Integer topUpSize = goalSize - openOrderSize;
-                String decisionUpdate = sendOrder(goalPrice, topUpSize);
-                decisionUpdates.add(decisionUpdate);
+                List<String> decisionUpdate = sendOrderInBatches(goalPrice, topUpSize, getBatchSize());
+                decisionUpdates.addAll(decisionUpdate);
             }
 
             // replace orders
@@ -50,8 +58,8 @@ public class OrderExecutor {
 
                 if (excessSize < 0) {
                     Integer overshotSize = -excessSize;
-                    String decisionUpdate = sendOrder(goalPrice, overshotSize);
-                    decisionUpdates.add(decisionUpdate);
+                    List<String> decisionUpdate = sendOrderInBatches(goalPrice, overshotSize, getBatchSize());
+                    decisionUpdates.addAll(decisionUpdate);
                 }
             }
         }
@@ -59,8 +67,20 @@ public class OrderExecutor {
         return decisionUpdates;
     }
 
+    public List<String> cancelAllOrders() {
+        List<String> decisionUpdates = new ArrayList<>();
+
+        for (Order order : getOpenOrders()) {
+            String decisionUpdate = cancelOrder(order);
+            decisionUpdates.add(decisionUpdate);
+        }
+
+        return decisionUpdates;
+    }
+
     public List<String> cancelOutdatedOrders(List<OrderGoal> orderGoals) {
-        // cancel open orders that are no longer part of the current order strategy
+        // cancel all open orders that are no longer part of the current order strategy
+
         List<String> decisionUpdates = new ArrayList<>();
 
         for (Order openOrder : getOpenOrders()) {
@@ -77,17 +97,6 @@ public class OrderExecutor {
                 String decisionUpdate = cancelOrder(openOrder);
                 decisionUpdates.add(decisionUpdate);
             }
-        }
-
-        return decisionUpdates;
-    }
-
-    public List<String> cancelAllOrders() {
-        List<String> decisionUpdates = new ArrayList<>();
-
-        for (Order order : getOpenOrders()) {
-            String decisionUpdate = cancelOrder(order);
-            decisionUpdates.add(decisionUpdate);
         }
 
         return decisionUpdates;
@@ -126,6 +135,22 @@ public class OrderExecutor {
         return decisionUpdate;
     }
 
+    private List<String> sendOrderInBatches(Double price, Integer size, Integer sizePerBatch) {
+        List<String> decisionUpdates = new ArrayList<>();
+
+        Integer remainingSizeToSend = size;
+        while (remainingSizeToSend > 0) {
+            Integer currentOrderSize = Math.min(sizePerBatch, remainingSizeToSend);
+
+            String decisionUpdate = sendOrder(price, currentOrderSize);
+            decisionUpdates.add(decisionUpdate);
+
+            remainingSizeToSend -= currentOrderSize;
+        }
+
+        return decisionUpdates;
+    }
+
     private String cancelOrder(Order order) {
         String decisionUpdate = String.format("[C:%s:%d]", order.getPrice(), order.getSize());
 
@@ -142,6 +167,14 @@ public class OrderExecutor {
 
     private Long getCurrentTimestamp() {
         return this.simulator.getTimestamp();
+    }
+
+    private Integer getBatchSize() {
+        if (this.batchSize == null) {
+            return DEFAULT_BATCH_SIZE;
+        }
+
+        return this.batchSize;
     }
 
     private void sortOpenOrdersByAscendingSizeAndDescendingTime(List<Order> openOrders) {
