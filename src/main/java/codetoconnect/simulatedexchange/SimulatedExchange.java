@@ -60,11 +60,7 @@ public class SimulatedExchange {
     }
 
     public void printEndOfSimulationSummary() {
-        System.out.format(
-                "****************** [Simulated Exchange Report] ******************\n" +
-                        "Volume-Weighted Average Price: %s\n" +
-                        "*****************************************************************\n",
-        calculateVolumeWeightedAveragePrice());
+        System.out.format("Volume-Weighted Average Price: %s\n", calculateVolumeWeightedAveragePrice());
     }
 
     private Double calculateVolumeWeightedAveragePrice() {

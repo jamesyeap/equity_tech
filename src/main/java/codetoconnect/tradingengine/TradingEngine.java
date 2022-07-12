@@ -56,13 +56,9 @@ public class TradingEngine {
     }
 
     public void printEndOfSimulationSummary() {
-        System.out.format(
-                "****************** [Trading Engine Report] ******************\n" +
-                        "Client Order Size: %s\n" +
-                        "Client Order Size Filled: %s\n" +
-                        "*************************************************************\n",
-                clientPovBuyOrder.getOrderQuantity(),
-                getCumulativeExecutedShares());
+        System.out.format("Client Order Size: %s\n" +
+                            "Client Order Size Filled: %s\n",
+                clientPovBuyOrder.getOrderQuantity(), getCumulativeExecutedShares());
     }
 
     private void updateStrategy() {

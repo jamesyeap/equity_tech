@@ -72,9 +72,11 @@ public class Simulator {
     }
 
     private void printEndOfSimulationSummary() {
+        System.out.println("************************************** [SIMULATION REPORT] **************************************");
         this.simulatedExchange.printEndOfSimulationSummary();
         System.out.println();
         this.tradingEngine.printEndOfSimulationSummary();
+        System.out.println("**************************************************************************************************");
     }
 
     private boolean allComponentsInitialized() {

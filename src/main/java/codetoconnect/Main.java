@@ -22,7 +22,7 @@ public class Main {
         // ========== CONFIGURATION FOR TESTING PHASE ==============================================================
          String clientOrder = "54=1; 40=1; 38=50000; 6404=10";
          String csvFilePath = "../market_data.csv";
-         Integer batchSize = 500;
+         Integer batchSize = null;
         // =========================================================================================================
 
 //        */
