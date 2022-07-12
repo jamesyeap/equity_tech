@@ -59,6 +59,26 @@ public class SimulatedExchange {
         return copy;
     }
 
+    public void printEndOfSimulationSummary() {
+        System.out.format(
+                "****************** [Simulated Exchange Report] ******************\n" +
+                        "Volume-Weighted Average Price: %s\n" +
+                        "*****************************************************************\n",
+        calculateVolumeWeightedAveragePrice());
+    }
+
+    private Double calculateVolumeWeightedAveragePrice() {
+        Double nominator = 0.0;
+        Double denominator = 0.0;
+
+        for (Order order : filledOrders) {
+            nominator += (order.getPrice() * order.getSize());
+            denominator += order.getSize();
+        }
+
+        return nominator / denominator;
+    }
+
     private boolean isMarketable(Order order) {
         if (atBestAskOrBetter(order)) {
             return true;

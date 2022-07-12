@@ -1,7 +1,6 @@
 package codetoconnect.tradingengine;
 
 import codetoconnect.marketdataprovider.MarketDataProvider;
-import codetoconnect.marketdataprovider.exceptions.UnrecognizedDataTypeException;
 import codetoconnect.marketdataprovider.orderbook.Ask;
 import codetoconnect.marketdataprovider.orderbook.Bid;
 import codetoconnect.simulatedexchange.SimulatedExchange;
@@ -30,7 +29,7 @@ public class TradingEngine {
         ClientPovBuyOrder clientPovBuyOrder = ClientOrderReader.readFromInput(clientOrder);
 
         System.out.format("Initialized Trading Engine with the following order from the client: \n" +
-                "   %s\n", clientPovBuyOrder);
+                "   %s\n\n", clientPovBuyOrder);
 
         return new TradingEngine(clientPovBuyOrder, simulator);
     }
@@ -52,6 +51,20 @@ public class TradingEngine {
         return false;
     }
 
+    public void setBatchSize(Integer batchSize) {
+        orderExecutor.setBatchSize(batchSize);
+    }
+
+    public void printEndOfSimulationSummary() {
+        System.out.format(
+                "****************** [Trading Engine Report] ******************\n" +
+                        "Client Order Size: %s\n" +
+                        "Client Order Size Filled: %s\n" +
+                        "*************************************************************\n",
+                clientPovBuyOrder.getOrderQuantity(),
+                getCumulativeExecutedShares());
+    }
+
     private void updateStrategy() {
         List<String> allDecisionUpdates = new ArrayList<>();
 
@@ -59,19 +72,19 @@ public class TradingEngine {
             System.out.format("========== [BELOW MIN RATIO]: (MIN RATIO = %d) (CUMULATIVE = %d) ==========\n",
                     getMinRatioSize(), getCumulativeExecutedShares());
 
-            // shortfall first
+            // get shortfall shares at far-touch prices first
             List<OrderGoal> aggressiveOrderGoal = generateAggressiveCatchupStrategy();
             allDecisionUpdates.addAll(
                     orderExecutor.addOrReplaceOrders(aggressiveOrderGoal)
             );
 
-            // adjust the rest of the orders with passive layering strategy
+            // then adjust the rest of the orders with passive layering strategy
             List<OrderGoal> passiveOrderGoals = generatePassiveLayeringStrategy();
             allDecisionUpdates.addAll(
                 orderExecutor.addOrReplaceOrders(passiveOrderGoals)
             );
 
-            // cleanup
+            // remove the open orders that are no longer a part of the strategy
             List<OrderGoal> orderGoals = new ArrayList<>(aggressiveOrderGoal);
             orderGoals.addAll(passiveOrderGoals);
             allDecisionUpdates.addAll(
@@ -95,7 +108,7 @@ public class TradingEngine {
                 orderExecutor.addOrReplaceOrders(orderGoals)
             );
 
-            // cleanup
+            // remove the open orders that are no longer a part of the strategy
             allDecisionUpdates.addAll(
                 orderExecutor.cancelOutdatedOrders(orderGoals)
             );

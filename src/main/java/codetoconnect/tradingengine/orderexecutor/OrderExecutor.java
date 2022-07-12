@@ -9,11 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderExecutor {
-    private static final Integer BATCH_SIZE = 50;
+    private static final Integer DEFAULT_BATCH_SIZE = Integer.MAX_VALUE;
+
+    private Integer batchSize;
+
     private final Simulator simulator;
 
     public OrderExecutor(Simulator simulator) {
         this.simulator = simulator;
+    }
+
+    public void setBatchSize(Integer batchSize) {
+        this.batchSize = batchSize;
     }
 
     public List<String> addOrReplaceOrders(List<OrderGoal> orderGoals) {
@@ -28,7 +35,7 @@ public class OrderExecutor {
             // top up
             if (goalSize > openOrderSize) {
                 Integer topUpSize = goalSize - openOrderSize;
-                List<String> decisionUpdate = sendOrderInBatches(goalPrice, topUpSize, BATCH_SIZE);
+                List<String> decisionUpdate = sendOrderInBatches(goalPrice, topUpSize, getBatchSize());
                 decisionUpdates.addAll(decisionUpdate);
             }
 
@@ -51,7 +58,7 @@ public class OrderExecutor {
 
                 if (excessSize < 0) {
                     Integer overshotSize = -excessSize;
-                    List<String> decisionUpdate = sendOrderInBatches(goalPrice, overshotSize, BATCH_SIZE);
+                    List<String> decisionUpdate = sendOrderInBatches(goalPrice, overshotSize, getBatchSize());
                     decisionUpdates.addAll(decisionUpdate);
                 }
             }
@@ -160,6 +167,14 @@ public class OrderExecutor {
 
     private Long getCurrentTimestamp() {
         return this.simulator.getTimestamp();
+    }
+
+    private Integer getBatchSize() {
+        if (this.batchSize == null) {
+            return DEFAULT_BATCH_SIZE;
+        }
+
+        return this.batchSize;
     }
 
     private void sortOpenOrdersByAscendingSizeAndDescendingTime(List<Order> openOrders) {

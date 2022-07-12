@@ -31,6 +31,8 @@ public class Simulator {
             simulationEnded = simulatedExchange.execute();
             if (simulationEnded) { break; }
         }
+
+        printEndOfSimulationSummary();
     }
 
     public void initialiseMarketDataProvider(String csvFilePath)
@@ -41,6 +43,12 @@ public class Simulator {
     public void initialiseTradingEngine(String clientOrder)
             throws ClientOrderReaderException {
         this.tradingEngine = TradingEngine.initialize(clientOrder, this);
+    }
+
+    public void initialiseTradingEngineWithBatchSize(String clientOrder, Integer batchSize)
+            throws ClientOrderReaderException {
+        initialiseTradingEngine(clientOrder);
+        this.tradingEngine.setBatchSize(batchSize);
     }
 
     public void initialiseSimulatedExchange() {
@@ -61,6 +69,12 @@ public class Simulator {
 
     public SimulatedExchange getSimulatedExchange() {
         return this.simulatedExchange;
+    }
+
+    private void printEndOfSimulationSummary() {
+        this.simulatedExchange.printEndOfSimulationSummary();
+        System.out.println();
+        this.tradingEngine.printEndOfSimulationSummary();
     }
 
     private boolean allComponentsInitialized() {
