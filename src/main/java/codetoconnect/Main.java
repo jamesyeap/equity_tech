@@ -99,7 +99,7 @@ public class Main {
 
                 clientInputIsValid = true;
             } catch (FileNotFoundException e) {
-                System.out.println("Oops, we could not find that file. Can you enter a valid file-path?");
+                System.out.println("Oops, I could not find that file. Can you enter a valid file-path?");
             }
 
             System.out.println();
