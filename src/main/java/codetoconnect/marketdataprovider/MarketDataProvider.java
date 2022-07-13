@@ -60,6 +60,8 @@ public class MarketDataProvider {
                 updateMarketTradedVolume(tradeData);
             }
         }
+
+        printLastUpdatedAtTimestampHeader();
     }
 
     public List<Bid> getBids() {
@@ -108,5 +110,13 @@ public class MarketDataProvider {
 
     private void sortAsksFromLowestToHighest(List<Ask> asks) {
         asks.sort(Comparator.comparing(Ask::getPrice));
+    }
+
+    private void printLastUpdatedAtTimestampHeader() {
+        System.out.format(
+                "===============================================================================================\n" +
+                "========== MARKET UPDATE AT %s ms ========================================================\n" +
+                "===============================================================================================\n",
+                getLastUpdatedAtTimestamp());
     }
 }

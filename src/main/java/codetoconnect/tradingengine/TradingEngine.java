@@ -41,14 +41,13 @@ public class TradingEngine {
     }
 
     public boolean execute() {
-        boolean allOrdersFilled = allOrdersFilled();
-        if (allOrdersFilled) {
-            return true;
-        }
-
         updateStrategy();
 
-        return false;
+        if (allOrdersFilled()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void setBatchSize(Integer batchSize) {
@@ -62,59 +61,36 @@ public class TradingEngine {
     }
 
     private void updateStrategy() {
-        List<String> allDecisionUpdates = new ArrayList<>();
-
         if (isBelowMinRatio()) {
-            System.out.format("========== [BELOW MIN RATIO]: (MIN RATIO = %d) (CUMULATIVE = %d) ==========\n",
-                    getMinRatioSize(), getCumulativeExecutedShares());
+            printBelowMinRatioUpdate();
 
             // get shortfall shares at far-touch prices first
             List<OrderGoal> aggressiveOrderGoal = generateAggressiveCatchupStrategy();
-            allDecisionUpdates.addAll(
-                    orderExecutor.addOrReplaceOrders(aggressiveOrderGoal)
-            );
+            orderExecutor.addOrReplaceOrders(aggressiveOrderGoal);
 
             // then adjust the rest of the orders with passive layering strategy
             List<OrderGoal> passiveOrderGoals = generatePassiveLayeringStrategy();
-            allDecisionUpdates.addAll(
-                orderExecutor.addOrReplaceOrders(passiveOrderGoals)
-            );
+            orderExecutor.addOrReplaceOrders(passiveOrderGoals);
 
             // remove the open orders that are no longer a part of the strategy
             List<OrderGoal> orderGoals = new ArrayList<>(aggressiveOrderGoal);
             orderGoals.addAll(passiveOrderGoals);
-            allDecisionUpdates.addAll(
-                orderExecutor.cancelOutdatedOrders(orderGoals)
-            );
-        } else if (hasBreachedMaxRatio()) {
-            // cancel all orders
-            System.out.format("========== [BREACHED MAX RATIO]: (MAX RATIO = %d) (CUMULATIVE = %d) ==========\n",
-                    getMaxRatioSize(), getCumulativeExecutedShares());
+            orderExecutor.cancelOutdatedOrders(orderGoals);
 
-            allDecisionUpdates.addAll(
-                    orderExecutor.cancelAllOrders()
-            );
+        } else if (hasBreachedMaxRatio()) {
+            printBreachedMaxRatioUpdate();
+
+            orderExecutor.cancelAllOrders();
         } else {
-            System.out.format("========== [WITHIN THRESHOLDS]: (MIN RATIO = %d) (MAX RATIO = %d) (CUMULATIVE = %d) ==========\n",
-                    getMinRatioSize(), getMaxRatioSize(), getCumulativeExecutedShares());
+            printWithinThresholdUpdate();
 
             // adjust the orders with passive layering strategy
             List<OrderGoal> orderGoals = generatePassiveLayeringStrategy();
-            allDecisionUpdates.addAll(
-                orderExecutor.addOrReplaceOrders(orderGoals)
-            );
+
+            orderExecutor.addOrReplaceOrders(orderGoals);
 
             // remove the open orders that are no longer a part of the strategy
-            allDecisionUpdates.addAll(
-                orderExecutor.cancelOutdatedOrders(orderGoals)
-            );
-        }
-
-        // print any updates to open orders
-        if (!allDecisionUpdates.isEmpty()) {
-            System.out.println(allDecisionUpdates);
-        } else {
-            System.out.println("[NO CHANGE]");
+            orderExecutor.cancelOutdatedOrders(orderGoals);
         }
 
         System.out.println();
@@ -238,5 +214,20 @@ public class TradingEngine {
         Integer cumulativeExecutedShares = getCumulativeExecutedShares();
 
         return orderQuantity - cumulativeExecutedShares;
+    }
+
+    private void printBelowMinRatioUpdate() {
+        System.out.format("::::::::::::::::: [BELOW MIN RATIO]: (MIN RATIO = %d) (CUMULATIVE = %d) :::::::::::::::::\n",
+                getMinRatioSize(), getCumulativeExecutedShares());
+    }
+
+    private void printBreachedMaxRatioUpdate() {
+        System.out.format("::::::::::::::::: [BREACHED MAX RATIO]: (CUMULATIVE = %d) (MAX RATIO = %d) :::::::::::::::::\n",
+                getCumulativeExecutedShares(), getMaxRatioSize());
+    }
+
+    private void printWithinThresholdUpdate() {
+        System.out.format(":::::: [WITHIN THRESHOLDS]: (MIN RATIO = %d) (CUMULATIVE = %d) (MAX RATIO = %d) ::::::\n",
+                getMinRatioSize(), getCumulativeExecutedShares(), getMaxRatioSize());
     }
 }
