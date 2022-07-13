@@ -5,9 +5,7 @@ import codetoconnect.marketdataprovider.orderbook.Ask;
 import codetoconnect.marketdataprovider.orderbook.Bid;
 import codetoconnect.simulatedexchange.SimulatedExchange;
 import codetoconnect.simulator.Simulator;
-import codetoconnect.tradingengine.clientorderreader.ClientOrderReader;
 import codetoconnect.tradingengine.clientorderreader.ClientPovBuyOrder;
-import codetoconnect.tradingengine.clientorderreader.exceptions.ClientOrderReaderException;
 import codetoconnect.tradingengine.orderexecutor.OrderExecutor;
 import codetoconnect.tradingengine.ordergoal.OrderGoal;
 
@@ -211,17 +209,22 @@ public class TradingEngine {
     }
 
     private void printBelowMinRatioUpdate() {
-        System.out.format("::::::::::::::::: [BELOW MIN RATIO]: (MIN RATIO = %d) (CUMULATIVE = %d) :::::::::::::::::\n",
-                getMinRatioSize(), getCumulativeExecutedShares());
+        System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
+        System.out.format("::: TRADING ENGINE ASSESSMENT: (BELOW MIN-RATIO) by %d shares ::::::::::::::::::::::::::\n",
+                getMinRatioSize() - getCumulativeExecutedShares());
+        System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     }
 
     private void printBreachedMaxRatioUpdate() {
-        System.out.format("::::::::::::::::: [BREACHED MAX RATIO]: (CUMULATIVE = %d) (MAX RATIO = %d) :::::::::::::::::\n",
-                getCumulativeExecutedShares(), getMaxRatioSize());
+        System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
+        System.out.format("::: TRADING ENGINE ASSESSMENT: (BREACHED MAX-RATIO) by %d shares ::::::::::::::::::::\n",
+                getCumulativeExecutedShares() - getMaxRatioSize());
+        System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     }
 
     private void printWithinThresholdUpdate() {
-        System.out.format(":::::: [WITHIN THRESHOLDS]: (MIN RATIO = %d) (CUMULATIVE = %d) (MAX RATIO = %d) ::::::\n",
-                getMinRatioSize(), getCumulativeExecutedShares(), getMaxRatioSize());
+        System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
+        System.out.println("::: TRADING ENGINE ASSESSMENT: (WITHIN THRESHOLDS) ::::::::::::::::::::::::::::::::::::::::");
+        System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     }
 }

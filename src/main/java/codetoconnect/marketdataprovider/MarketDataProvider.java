@@ -62,6 +62,7 @@ public class MarketDataProvider {
         }
 
         printLastUpdatedAtTimestampHeader();
+        printKeyStatistics();
     }
 
     public List<Bid> getBids() {
@@ -114,9 +115,20 @@ public class MarketDataProvider {
 
     private void printLastUpdatedAtTimestampHeader() {
         System.out.format(
-                "===============================================================================================\n" +
-                "========== MARKET UPDATE AT %s ms ========================================================\n" +
-                "===============================================================================================\n",
+                "===========================================================================================\n" +
+                "=============================================== RECEIVED MARKET UPDATE AT %s ms ======\n",
                 getLastUpdatedAtTimestamp());
+    }
+
+    private void printKeyStatistics() {
+        System.out.format(
+                "==================================================== BEST-BID: %s ======================\n" +
+                "==================================================== BEST-ASK: %s ======================\n" +
+                "==================================================== MARKET-TRADED VOLUME: %s =======\n" +
+                "===========================================================================================\n",
+                getBestBid().getPrice(),
+                getBestAsk().getPrice(),
+                getMarketTradedVolume()
+        );
     }
 }
