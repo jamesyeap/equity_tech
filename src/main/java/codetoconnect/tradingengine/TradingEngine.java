@@ -41,14 +41,13 @@ public class TradingEngine {
     }
 
     public boolean execute() {
-        boolean allOrdersFilled = allOrdersFilled();
-        if (allOrdersFilled) {
-            return true;
-        }
-
         updateStrategy();
 
-        return false;
+        if (allOrdersFilled()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void setBatchSize(Integer batchSize) {
