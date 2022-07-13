@@ -11,14 +11,14 @@ import java.util.List;
 
 public class SimulatedExchange {
 
+    // after 180,000 ms (3 minutes), orders with prices at best-bid prices or better are filled
     private static final Long NEAR_TOUCH_MARKETABLE_AGE = 180000L;
-    private final Simulator simulator;
 
     private final List<Order> openOrders;
     private final List<Order> filledOrders;
     private final List<Order> cancelledOrders;
-
     private Integer cumulativeExecutedShares;
+    private final Simulator simulator;
 
     public SimulatedExchange(Simulator simulator) {
         this.openOrders = new ArrayList<>();
@@ -52,6 +52,8 @@ public class SimulatedExchange {
     public void cancelOrder(Order order) {
         this.openOrders.remove(order);
         this.cancelledOrders.add(order);
+
+        printCancelledOrderUpdate(order);
     }
 
     public List<Order> getOpenOrders() {
@@ -95,24 +97,25 @@ public class SimulatedExchange {
         return (order.getPrice() >= getBestBid().getPrice());
     }
 
+    private void fillOrder(Order order) {
+        this.filledOrders.add(order);
+        this.cumulativeExecutedShares += order.getSize();
+
+        printFilledOrderUpdate(order);
+    }
+
     private void fillOpenOrder(Order order) {
         fillOrder(order);
         openOrders.remove(order);
     }
 
-    private void fillOrder(Order order) {
-        this.filledOrders.add(order);
-        this.cumulativeExecutedShares += order.getSize();
-
-        System.out.format("Filled %s; Cumulative Quantity: %d\n", order, cumulativeExecutedShares);
+    private void queueOrder(Order order) {
+        this.openOrders.add(order);
+        printQueuedOrderUpdate(order);
     }
 
     public Integer getCumulativeExecutedShares() {
         return cumulativeExecutedShares;
-    }
-
-    private void queueOrder(Order order) {
-        this.openOrders.add(order);
     }
 
     private Long getOrderAge(Order order) {
@@ -130,5 +133,17 @@ public class SimulatedExchange {
     private Bid getBestBid() {
         MarketDataProvider marketDataProvider = this.simulator.getMarketDataProvider();
         return marketDataProvider.getBestBid();
+    }
+
+    private void printQueuedOrderUpdate(Order order) {
+        System.out.format("Queued %s\n", order);
+    }
+
+    private void printFilledOrderUpdate(Order order) {
+        System.out.format("Filled %s; Cumulative Quantity: %d\n", order, getCumulativeExecutedShares());
+    }
+
+    private void printCancelledOrderUpdate(Order order) {
+        System.out.format("Cancelled %s\n", order);
     }
 }

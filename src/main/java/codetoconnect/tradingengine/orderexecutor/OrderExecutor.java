@@ -23,9 +23,7 @@ public class OrderExecutor {
         this.batchSize = batchSize;
     }
 
-    public List<String> addOrReplaceOrders(List<OrderGoal> orderGoals) {
-        List<String> decisionUpdates = new ArrayList<>();
-
+    public void addOrReplaceOrders(List<OrderGoal> orderGoals) {
         // add or replace open orders
         for (OrderGoal goal : orderGoals) {
             Double goalPrice = goal.getPrice();
@@ -35,8 +33,7 @@ public class OrderExecutor {
             // top up
             if (goalSize > openOrderSize) {
                 Integer topUpSize = goalSize - openOrderSize;
-                List<String> decisionUpdate = sendOrderInBatches(goalPrice, topUpSize, getBatchSize());
-                decisionUpdates.addAll(decisionUpdate);
+                sendOrderInBatches(goalPrice, topUpSize, getBatchSize());
             }
 
             // replace orders
@@ -47,8 +44,7 @@ public class OrderExecutor {
                 sortOpenOrdersByAscendingSizeAndDescendingTime(openOrdersWithSamePrice);
 
                 for (Order order : openOrdersWithSamePrice) {
-                    String decisionUpdate = cancelOrder(order);
-                    decisionUpdates.add(decisionUpdate);
+                    cancelOrder(order);
 
                     excessSize -= order.getSize();
                     if (excessSize <= 0) {
@@ -58,22 +54,14 @@ public class OrderExecutor {
 
                 if (excessSize < 0) {
                     Integer overshotSize = -excessSize;
-                    List<String> decisionUpdate = sendOrderInBatches(goalPrice, overshotSize, getBatchSize());
-                    decisionUpdates.addAll(decisionUpdate);
+                    sendOrderInBatches(goalPrice, overshotSize, getBatchSize());
                 }
             }
         }
-
-        return decisionUpdates;
     }
 
     public List<String> cancelAllOrders() {
         List<String> decisionUpdates = new ArrayList<>();
-
-        for (Order order : getOpenOrders()) {
-            String decisionUpdate = cancelOrder(order);
-            decisionUpdates.add(decisionUpdate);
-        }
 
         return decisionUpdates;
     }
@@ -94,8 +82,7 @@ public class OrderExecutor {
             }
 
             if (isOutdated) {
-                String decisionUpdate = cancelOrder(openOrder);
-                decisionUpdates.add(decisionUpdate);
+                cancelOrder(openOrder);
             }
         }
 
@@ -125,39 +112,32 @@ public class OrderExecutor {
         return openOrdersWithSamePrice;
     }
 
-    private String sendOrder(Double price, Integer size) {
+    private void sendOrder(Double price, Integer size) {
         String decisionUpdate = String.format("[N:%s:%d]", price, size);
+        System.out.format("%s ", decisionUpdate);
 
         Order order = new Order(getCurrentTimestamp(), price, size);
         SimulatedExchange simulatedExchange = this.simulator.getSimulatedExchange();
         simulatedExchange.receiveOrder(order);
-
-        return decisionUpdate;
     }
 
-    private List<String> sendOrderInBatches(Double price, Integer size, Integer sizePerBatch) {
-        List<String> decisionUpdates = new ArrayList<>();
-
+    private void sendOrderInBatches(Double price, Integer size, Integer sizePerBatch) {
         Integer remainingSizeToSend = size;
         while (remainingSizeToSend > 0) {
             Integer currentOrderSize = Math.min(sizePerBatch, remainingSizeToSend);
 
-            String decisionUpdate = sendOrder(price, currentOrderSize);
-            decisionUpdates.add(decisionUpdate);
+            sendOrder(price, currentOrderSize);
 
             remainingSizeToSend -= currentOrderSize;
         }
-
-        return decisionUpdates;
     }
 
-    private String cancelOrder(Order order) {
+    private void cancelOrder(Order order) {
         String decisionUpdate = String.format("[C:%s:%d]", order.getPrice(), order.getSize());
+        System.out.format("%s ", decisionUpdate);
 
         SimulatedExchange simulatedExchange = this.simulator.getSimulatedExchange();
         simulatedExchange.cancelOrder(order);
-
-        return decisionUpdate;
     }
 
     private List<Order> getOpenOrders() {
