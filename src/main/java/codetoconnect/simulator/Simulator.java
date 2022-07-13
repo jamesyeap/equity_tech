@@ -4,6 +4,7 @@ import codetoconnect.marketdataprovider.MarketDataProvider;
 import codetoconnect.marketdataprovider.exceptions.UnrecognizedDataTypeException;
 import codetoconnect.simulatedexchange.SimulatedExchange;
 import codetoconnect.tradingengine.TradingEngine;
+import codetoconnect.tradingengine.clientorderreader.ClientPovBuyOrder;
 import codetoconnect.tradingengine.clientorderreader.exceptions.ClientOrderReaderException;
 
 public class Simulator {
@@ -40,12 +41,11 @@ public class Simulator {
         this.marketDataProvider = MarketDataProvider.fromCsvFile(csvFilePath);
     }
 
-    public void initialiseTradingEngine(String clientOrder)
-            throws ClientOrderReaderException {
+    public void initialiseTradingEngine(ClientPovBuyOrder clientOrder) {
         this.tradingEngine = TradingEngine.initialize(clientOrder, this);
     }
 
-    public void initialiseTradingEngineWithBatchSize(String clientOrder, Integer batchSize)
+    public void initialiseTradingEngineWithBatchSize(ClientPovBuyOrder clientOrder, Integer batchSize)
             throws ClientOrderReaderException {
         initialiseTradingEngine(clientOrder);
         this.tradingEngine.setBatchSize(batchSize);

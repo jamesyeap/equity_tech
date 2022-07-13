@@ -24,14 +24,8 @@ public class TradingEngine {
 
     private final Simulator simulator;
 
-    public static TradingEngine initialize(String clientOrder, Simulator simulator)
-            throws ClientOrderReaderException  {
-        ClientPovBuyOrder clientPovBuyOrder = ClientOrderReader.readFromInput(clientOrder);
-
-        System.out.format("Initialized Trading Engine with the following order from the client: \n" +
-                "   %s\n\n", clientPovBuyOrder);
-
-        return new TradingEngine(clientPovBuyOrder, simulator);
+    public static TradingEngine initialize(ClientPovBuyOrder clientOrder, Simulator simulator) {
+        return new TradingEngine(clientOrder, simulator);
     }
 
     TradingEngine(ClientPovBuyOrder clientPovBuyOrder, Simulator simulator) {
