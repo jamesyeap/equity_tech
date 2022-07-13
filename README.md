@@ -39,8 +39,7 @@ java -jar equity-tech-1.0
 8. Enter the relative file-path of a market-data input file
   - a sample CSV file is available in the repository folder:
     - `<REPOSITORY_FOLDER>/input/market_data.zip`
-    - to use the file, unzip the compressed folder
-    - Enter the file-path when prompted:
+  - to use the file, enter the file-path when prompted:
       - `../input/market_data.csv`
   - note: if you are using a custom market-data input file, it must be
     - a CSV file and,

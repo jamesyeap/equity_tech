@@ -74,7 +74,12 @@ public class SimulatedExchange {
             denominator += order.getSize();
         }
 
-        return nominator / denominator;
+        Double result = nominator / denominator;
+        if (result.isNaN()) {
+            return 0.0;
+        }
+
+        return result;
     }
 
     private boolean isMarketable(Order order) {

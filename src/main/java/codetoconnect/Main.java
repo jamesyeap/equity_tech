@@ -68,12 +68,6 @@ public class Main {
         while (!clientInputIsValid) {
             System.out.println("Please enter your POV buy-order in FIX format:");
             System.out.println("[EXAMPLE INPUT]: 54=1; 40=1; 38=50000; 6404=10");
-            System.out.println("=== will submit the following order: ====================");
-            System.out.println("======= (54=1): BUY order ===============================");
-            System.out.println("======= (40=1): MARKET order ============================");
-            System.out.println("======= (38=50000): order quantity of 50,000 shares =====");
-            System.out.println("======= (6404=10): POV target percentage of 10% =========");
-            System.out.println("=========================================================");
             System.out.format("[YOUR INPUT]: ");
             String input = scanner.nextLine();
 
