@@ -91,7 +91,7 @@ public class Main {
         while (!clientInputIsValid) {
             try {
                 System.out.println("Please enter the relative file-path of your CSV file");
-                System.out.println("[EXAMPLE INPUT]: ../input/market_data.csv");
+                System.out.println("[EXAMPLE INPUT]: ./input/market_data.csv");
                 System.out.format("[YOUR INPUT]: ");
                 csvFilePathInput = scanner.nextLine();
 
