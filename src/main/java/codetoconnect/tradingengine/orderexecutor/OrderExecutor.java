@@ -30,46 +30,24 @@ public class OrderExecutor {
             Integer goalSize = goal.getSize();
             Integer openOrderSize = getSizeOfOpenOrdersWithSamePrice(goal);
 
-            // top up
             if (goalSize > openOrderSize) {
-                Integer topUpSize = goalSize - openOrderSize;
-                sendOrderInBatches(goalPrice, topUpSize, getBatchSize());
+                topUpOrder(goalPrice, goalSize, openOrderSize);
             }
 
-            // replace orders
             if (goalSize < openOrderSize) {
-                Integer excessSize = openOrderSize - goalSize;
-
-                List<Order> openOrdersWithSamePrice = getOpenOrdersWithSamePrice(goalPrice);
-                sortOpenOrdersByAscendingSizeAndDescendingTime(openOrdersWithSamePrice);
-
-                for (Order order : openOrdersWithSamePrice) {
-                    cancelOrder(order);
-
-                    excessSize -= order.getSize();
-                    if (excessSize <= 0) {
-                        break;
-                    }
-                }
-
-                if (excessSize < 0) {
-                    Integer overshotSize = -excessSize;
-                    sendOrderInBatches(goalPrice, overshotSize, getBatchSize());
-                }
+                replaceOrders(goalPrice, goalSize, openOrderSize);
             }
         }
     }
 
-    public List<String> cancelAllOrders() {
-        List<String> decisionUpdates = new ArrayList<>();
-
-        return decisionUpdates;
+    public void cancelAllOrders() {
+        for (Order openOrder : getOpenOrders()) {
+            cancelOrder(openOrder);
+        }
     }
 
-    public List<String> cancelOutdatedOrders(List<OrderGoal> orderGoals) {
+    public void cancelOutdatedOrders(List<OrderGoal> orderGoals) {
         // cancel all open orders that are no longer part of the current order strategy
-
-        List<String> decisionUpdates = new ArrayList<>();
 
         for (Order openOrder : getOpenOrders()) {
             boolean isOutdated = true;
@@ -85,8 +63,32 @@ public class OrderExecutor {
                 cancelOrder(openOrder);
             }
         }
+    }
 
-        return decisionUpdates;
+    private void topUpOrder(Double goalPrice, Integer goalSize, Integer openOrderSize) {
+        Integer topUpSize = goalSize - openOrderSize;
+        sendOrderInBatches(goalPrice, topUpSize, getBatchSize());
+    }
+
+    private void replaceOrders(Double goalPrice, Integer goalSize, Integer openOrderSize) {
+        Integer excessSize = openOrderSize - goalSize;
+
+        List<Order> openOrdersWithSamePrice = getOpenOrdersWithSamePrice(goalPrice);
+        sortOpenOrdersByAscendingSizeAndDescendingTime(openOrdersWithSamePrice);
+
+        for (Order order : openOrdersWithSamePrice) {
+            cancelOrder(order);
+
+            excessSize -= order.getSize();
+            if (excessSize <= 0) {
+                break;
+            }
+        }
+
+        if (excessSize < 0) {
+            Integer overshotSize = -excessSize;
+            sendOrderInBatches(goalPrice, overshotSize, getBatchSize());
+        }
     }
 
     private Integer getSizeOfOpenOrdersWithSamePrice(OrderGoal orderGoal) {
