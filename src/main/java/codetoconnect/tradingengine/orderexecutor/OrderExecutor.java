@@ -3,6 +3,7 @@ package codetoconnect.tradingengine.orderexecutor;
 import codetoconnect.simulatedexchange.SimulatedExchange;
 import codetoconnect.simulatedexchange.order.Order;
 import codetoconnect.simulator.Simulator;
+import codetoconnect.simulator.loggingservice.TradingEngineLoggingService;
 import codetoconnect.tradingengine.ordergoal.OrderGoal;
 
 import java.util.ArrayList;
@@ -117,6 +118,7 @@ public class OrderExecutor {
     private void sendOrder(Double price, Integer size) {
         String decisionUpdate = String.format("[N:%s:%d]", price, size);
         System.out.format("%s ", decisionUpdate);
+        TradingEngineLoggingService.logDecision(decisionUpdate);
 
         Order order = new Order(getCurrentTimestamp(), price, size);
         SimulatedExchange simulatedExchange = this.simulator.getSimulatedExchange();
@@ -137,6 +139,7 @@ public class OrderExecutor {
     private void cancelOrder(Order order) {
         String decisionUpdate = String.format("[C:%s:%d]", order.getPrice(), order.getSize());
         System.out.format("%s ", decisionUpdate);
+        TradingEngineLoggingService.logDecision(decisionUpdate);
 
         SimulatedExchange simulatedExchange = this.simulator.getSimulatedExchange();
         simulatedExchange.cancelOrder(order);

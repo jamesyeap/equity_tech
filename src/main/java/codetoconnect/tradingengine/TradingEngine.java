@@ -5,6 +5,8 @@ import codetoconnect.marketdataprovider.orderbook.Ask;
 import codetoconnect.marketdataprovider.orderbook.Bid;
 import codetoconnect.simulatedexchange.SimulatedExchange;
 import codetoconnect.simulator.Simulator;
+import codetoconnect.simulator.SimulatorComponent;
+import codetoconnect.simulator.loggingservice.TradingEngineLoggingService;
 import codetoconnect.tradingengine.clientorderreader.ClientPovBuyOrder;
 import codetoconnect.tradingengine.orderexecutor.OrderExecutor;
 import codetoconnect.tradingengine.ordergoal.OrderGoal;
@@ -12,7 +14,7 @@ import codetoconnect.tradingengine.ordergoal.OrderGoal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TradingEngine {
+public class TradingEngine implements SimulatorComponent {
     private static final Double MIN_RATIO_MODIFIER = 0.8;
     private static final Double MAX_RATIO_MODIFIER = 1.2;
 
@@ -32,8 +34,13 @@ public class TradingEngine {
         this.simulator = simulator;
     }
 
+    @Override
     public boolean execute() {
+        TradingEngineLoggingService.startLogAt(getTimestamp());
+
         updateStrategy();
+
+        TradingEngineLoggingService.endLog();
 
         if (allOrdersFilled()) {
             return true;
@@ -60,8 +67,8 @@ public class TradingEngine {
             List<OrderGoal> aggressiveOrderGoal = generateAggressiveCatchupStrategy();
             orderExecutor.addOrReplaceOrders(aggressiveOrderGoal);
 
-            // then adjust the rest of the orders with passive layering strategy
-            List<OrderGoal> passiveOrderGoals = generatePassiveLayeringStrategy();
+            // then adjust the rest of the orders with passive posting strategy
+            List<OrderGoal> passiveOrderGoals = generatePassivePostingStrategy();
             orderExecutor.addOrReplaceOrders(passiveOrderGoals);
 
             // remove the open orders that are no longer a part of the strategy
@@ -74,10 +81,10 @@ public class TradingEngine {
 
             orderExecutor.cancelAllOrders();
         } else {
-            printWithinThresholdUpdate();
+            printPassivePostingUpdate();
 
-            // adjust the orders with passive layering strategy
-            List<OrderGoal> orderGoals = generatePassiveLayeringStrategy();
+            // adjust the orders with passive posting strategy
+            List<OrderGoal> orderGoals = generatePassivePostingStrategy();
 
             orderExecutor.addOrReplaceOrders(orderGoals);
 
@@ -100,7 +107,7 @@ public class TradingEngine {
         return getCumulativeExecutedShares() >= getOrderQuantity();
     }
 
-    private List<OrderGoal> generatePassiveLayeringStrategy() {
+    private List<OrderGoal> generatePassivePostingStrategy() {
         List<OrderGoal> goals = new ArrayList<>();
 
         List<Bid> bids = getBids();
@@ -135,7 +142,7 @@ public class TradingEngine {
         Integer minRatioSize = getMinRatioSize();
 
         Integer shortfallSize = minRatioSize - cumulativeExecutedShares;
-        Integer remainingSize = getRemainingShares();;
+        Integer remainingSize = getRemainingShares();
         Integer goalSize = Math.min(shortfallSize, remainingSize);
 
         Double bestAskPrice = getBestAsk().getPrice();
@@ -170,6 +177,11 @@ public class TradingEngine {
     private Integer getMarketTradedVolume() {
         MarketDataProvider marketDataProvider = simulator.getMarketDataProvider();
         return marketDataProvider.getMarketTradedVolume();
+    }
+
+    private Long getTimestamp() {
+        MarketDataProvider marketDataProvider = simulator.getMarketDataProvider();
+        return marketDataProvider.getLastUpdatedAtTimestamp();
     }
 
     private Double getTargetPercentage() {
@@ -217,14 +229,14 @@ public class TradingEngine {
 
     private void printBreachedMaxRatioUpdate() {
         System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
-        System.out.format("::: TRADING ENGINE ASSESSMENT: (BREACHED MAX-RATIO) by %d shares ::::::::::::::::::::\n",
+        System.out.format("::: TRADING ENGINE ASSESSMENT: (BREACH MAX-RATIO) by %d shares ::::::::::::::::::::\n",
                 getCumulativeExecutedShares() - getMaxRatioSize());
         System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     }
 
-    private void printWithinThresholdUpdate() {
+    private void printPassivePostingUpdate() {
         System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
-        System.out.println("::: TRADING ENGINE ASSESSMENT: (WITHIN THRESHOLDS) ::::::::::::::::::::::::::::::::::::::::");
+        System.out.println("::: TRADING ENGINE ASSESSMENT: (PASSIVE POSTING) ::::::::::::::::::::::::::::::::::::::::");
         System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     }
 }

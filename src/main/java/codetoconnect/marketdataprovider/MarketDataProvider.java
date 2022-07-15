@@ -9,12 +9,13 @@ import codetoconnect.marketdataprovider.marketdata.QuoteData;
 import codetoconnect.marketdataprovider.marketdata.TradeData;
 import codetoconnect.marketdataprovider.orderbook.Ask;
 import codetoconnect.marketdataprovider.orderbook.OrderBook;
+import codetoconnect.simulator.SimulatorComponent;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class MarketDataProvider {
+public class MarketDataProvider implements SimulatorComponent {
 
     private DataStreamer dataStreamer;
     private OrderBook orderBook;
@@ -33,6 +34,7 @@ public class MarketDataProvider {
         this.marketTradedVolume = 0;
     }
 
+    @Override
     public boolean execute() {
         boolean marketClosed = false;
         try {

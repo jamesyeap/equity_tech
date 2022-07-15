@@ -5,11 +5,13 @@ import codetoconnect.marketdataprovider.orderbook.Ask;
 import codetoconnect.marketdataprovider.orderbook.Bid;
 import codetoconnect.simulatedexchange.order.Order;
 import codetoconnect.simulator.Simulator;
+import codetoconnect.simulator.SimulatorComponent;
+import codetoconnect.simulator.loggingservice.SimulatedExchangeLoggingService;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SimulatedExchange {
+public class SimulatedExchange implements SimulatorComponent {
 
     // after 180,000 ms (3 minutes), orders with prices at best-bid prices or better are filled
     private static final Long NEAR_TOUCH_MARKETABLE_AGE = 180000L;
@@ -29,7 +31,10 @@ public class SimulatedExchange {
         this.simulator = simulator;
     }
 
+    @Override
     public boolean execute() {
+        SimulatedExchangeLoggingService.startLog();
+
         boolean endSimulation = false;
 
         for (Order order : getOpenOrders()) {
@@ -37,6 +42,8 @@ public class SimulatedExchange {
                 fillOpenOrder(order);
             }
         }
+
+        SimulatedExchangeLoggingService.endLogAt(getTimestamp());
 
         return endSimulation;
     }
@@ -53,7 +60,7 @@ public class SimulatedExchange {
         this.openOrders.remove(order);
         this.cancelledOrders.add(order);
 
-        printCancelledOrderUpdate(order);
+        logCancelledOrderUpdate(order);
     }
 
     public List<Order> getOpenOrders() {
@@ -106,7 +113,7 @@ public class SimulatedExchange {
         this.filledOrders.add(order);
         this.cumulativeExecutedShares += order.getSize();
 
-        printFilledOrderUpdate(order);
+        logFilledOrderUpdate(order);
     }
 
     private void fillOpenOrder(Order order) {
@@ -116,7 +123,7 @@ public class SimulatedExchange {
 
     private void queueOrder(Order order) {
         this.openOrders.add(order);
-        printQueuedOrderUpdate(order);
+        logQueuedOrderUpdate(order);
     }
 
     public Integer getCumulativeExecutedShares() {
@@ -140,15 +147,29 @@ public class SimulatedExchange {
         return marketDataProvider.getBestBid();
     }
 
-    private void printQueuedOrderUpdate(Order order) {
-        System.out.format("Queued %s\n", order);
+    private Long getTimestamp() {
+        MarketDataProvider marketDataProvider = this.simulator.getMarketDataProvider();
+        return marketDataProvider.getLastUpdatedAtTimestamp();
     }
 
-    private void printFilledOrderUpdate(Order order) {
-        System.out.format("Filled %s; Cumulative Quantity: %d\n", order, getCumulativeExecutedShares());
+    private void logQueuedOrderUpdate(Order order) {
+        String response = String.format("Queued %s\n", order);
+
+        System.out.println(response);
+        SimulatedExchangeLoggingService.logResponse(response);
     }
 
-    private void printCancelledOrderUpdate(Order order) {
-        System.out.format("Cancelled %s\n", order);
+    private void logFilledOrderUpdate(Order order) {
+        String response = String.format("Filled %s; Cumulative Quantity: %d\n", order, getCumulativeExecutedShares());
+
+        System.out.println(response);
+        SimulatedExchangeLoggingService.logResponse(response);
+    }
+
+    private void logCancelledOrderUpdate(Order order) {
+        String response = String.format("Cancelled %s\n", order);
+
+        System.out.println(response);
+        SimulatedExchangeLoggingService.logResponse(response);
     }
 }

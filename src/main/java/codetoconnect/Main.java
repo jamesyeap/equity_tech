@@ -40,6 +40,8 @@ public class Main {
         Simulator simulator = new Simulator();
 
         try {
+            simulator.initialiseLoggingService();
+
             simulator.initialiseMarketDataProvider(csvFilePath);
 
             if (batchSizeIsSpecified(batchSize)) {
