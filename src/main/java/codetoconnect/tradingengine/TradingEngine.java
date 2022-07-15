@@ -60,8 +60,8 @@ public class TradingEngine implements SimulatorComponent {
     }
 
     private void updateStrategy() {
-        if (isBelowMinRatio()) {
-            printBelowMinRatioUpdate();
+        if (isBehindMinRatio()) {
+            printBehindMinRatioUpdate();
 
             // get shortfall shares at far-touch prices first
             List<OrderGoal> aggressiveOrderGoal = generateAggressiveCatchupStrategy();
@@ -95,7 +95,7 @@ public class TradingEngine implements SimulatorComponent {
         System.out.println();
     }
 
-    private boolean isBelowMinRatio() {
+    private boolean isBehindMinRatio() {
         return (getCumulativeExecutedShares() < getMinRatioSize());
     }
 
@@ -220,9 +220,9 @@ public class TradingEngine implements SimulatorComponent {
         return orderQuantity - cumulativeExecutedShares;
     }
 
-    private void printBelowMinRatioUpdate() {
+    private void printBehindMinRatioUpdate() {
         System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
-        System.out.format("::: TRADING ENGINE ASSESSMENT: (BELOW MIN-RATIO) by %d shares ::::::::::::::::::::::::::\n",
+        System.out.format("::: TRADING ENGINE ASSESSMENT: (BEHIND MIN-RATIO) by %d shares ::::::::::::::::::::::::::\n",
                 getMinRatioSize() - getCumulativeExecutedShares());
         System.out.println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     }

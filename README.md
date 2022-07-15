@@ -55,9 +55,61 @@ java -jar target/equity-tech-1.0
   - If you do not wish to split buy-orders, enter `n` when prompted
 9. The simulation will now begin.
 
-## Saving output
-To save the execution logs of the program, run the program with the following command:
-```bash
-java -jar equity-tech-1.0 > OUTPUT_LOG.txt
+## Output
+### Console Logs
+When the simulation is running, the console will display detailed information about the Market, Trading Engine and the Simulated Exchange:
 ```
-  - this will save all logs to a text-file named "OUTPUT_LOG.txt" in the current working directory.
+===========================================================================================
+=============================================== RECEIVED MARKET UPDATE AT 5595244 ms ======
+==================================================== BEST-BID: 52.35 ======================
+==================================================== BEST-ASK: 52.45 ======================
+==================================================== MARKET-TRADED VOLUME: 351500 =======
+===========================================================================================
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::: TRADING ENGINE ASSESSMENT: (PASSIVE POSTING) ::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+[N:52.35:50] Queued 50@52.35
+
+[C:52.25:40] Cancelled 40@52.25
+
+[C:52.25:18940] Cancelled 18940@52.25
+
+[N:52.25:18930] Queued 18930@52.25
+```
+See sections below for the breakdown.
+
+#### Market Information
+The first part of the log displays information about the market.
+```
+===========================================================================================
+=============================================== RECEIVED MARKET UPDATE AT 5595244 ms ======
+==================================================== BEST-BID: 52.35 ======================
+==================================================== BEST-ASK: 52.45 ======================
+==================================================== MARKET-TRADED VOLUME: 351500 =======
+===========================================================================================
+```
+
+#### Trading Engine Response
+The second part of the log displays the trading engine's response to the latest market condition, which can be one of the following:
+- PASSIVE POSTING
+- BEHIND MIN-RATIO
+- BREACHED MAX-RATIO
+```
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::: TRADING ENGINE ASSESSMENT: (PASSIVE POSTING) ::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+```
+
+#### Sent Orders
+The last part of the log displays information about the order sent by the trading engine, and the simulated engine's execution.
+```
+[N:52.35:50] Queued 50@52.35
+
+[C:52.25:40] Cancelled 40@52.25
+
+[C:52.25:18940] Cancelled 18940@52.25
+
+[N:52.25:18930] Queued 18930@52.25
+```
+- `[N:52.35:50]` indicates that the trading engine sent an order of `50@52.35` to the simulated exchange
+- `Queued 50@52.35` indicates that the simulated exchange has placed this order in the queue.
