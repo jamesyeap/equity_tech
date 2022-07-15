@@ -118,7 +118,7 @@ The last part of the log displays information about the order sent by the tradin
 - `[N:52.35:50]` indicates that the trading engine sent an order of `50@52.35` to the simulated exchange
 - `Queued 50@52.35` indicates that the simulated exchange has placed this order in the queue.
 
-### Simulation Summary
+#### Simulation Summary
 At the end of the simulation, a summary of the order execution will be printed to the console:
 ```
 *********************************************************************************************
