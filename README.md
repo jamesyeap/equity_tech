@@ -56,6 +56,10 @@ java -jar target/equity-tech-1.0
 9. The simulation will now begin.
 
 ## Output
+The program will send logs to 2 locations:
+- to the console
+- save logs in files in the current working directory
+
 ### Console Logs
 When the simulation is running, the console will display detailed information about the Market, Trading Engine and the Simulated Exchange:
 ```
@@ -113,3 +117,8 @@ The last part of the log displays information about the order sent by the tradin
 ```
 - `[N:52.35:50]` indicates that the trading engine sent an order of `50@52.35` to the simulated exchange
 - `Queued 50@52.35` indicates that the simulated exchange has placed this order in the queue.
+
+### File Logs
+At the end of the simulation, logs will be saved in two files in the current working-directory:
+- `TradingEngineLogs.txt`
+- `SimulatedExchangeLogs.txt`
