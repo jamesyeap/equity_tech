@@ -1,9 +1,6 @@
 # Equity Tech
 Code to Connect 2022, Bank of America.
 
-# Demo
-![demo](https://user-images.githubusercontent.com/34131671/179945529-75937b44-78a9-4e1a-99e9-25e7be717c0f.gif)
-
 # Getting Started
 ## Pre-requisites
 1. Java 11 (and above)
